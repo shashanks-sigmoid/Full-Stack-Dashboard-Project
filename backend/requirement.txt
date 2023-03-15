@@ -1,0 +1,8 @@
+Flask
+flask-marshmallow
+Flask-Sqlalchemy
+marshmallow-sqlalchemy
+psycopg2-binary
+python-dotenv
+flask-cors
+python-dotenv

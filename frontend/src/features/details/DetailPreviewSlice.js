@@ -5,7 +5,11 @@ import {
 } from '@reduxjs/toolkit'
 
 const initialState = {
+
     table_name: '',
+    queryForm: {},
+    addFilterModal: false,
+
 }
 
 // export const fetchInputs = createAsyncThunk('form/fetchInputs', (state) => {
@@ -27,8 +31,14 @@ const DetailPreviewSlice = createSlice({
             const { value } = action.payload;
             state.table_name = value;
         },
+        handleAddFilterModalOpen: (state) => {
+            state.addFilterModal = true;
+        },
+        handleAddFilterModalClose: (state) => {
+            state.addFilterModal = false;
+        },
     }
 })
 
-export const { handleTableNameOnChange } = DetailPreviewSlice.actions;
+export const { handleTableNameOnChange, handleAddFilterModalOpen, handleAddFilterModalClose } = DetailPreviewSlice.actions;
 export default DetailPreviewSlice.reducer

@@ -1,7 +1,7 @@
 import { Box, Button, FormControl, MenuItem, Select, TextField, Typography } from '@mui/material'
 import React from 'react';
-import { useDispatch } from 'react-redux';
-import { handleAddFilterModalClose } from './DetailPreviewSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { handleAddFilterModalClose, handleFilterColumns, handleDeleteFilter, handleFilterTypeInputChange } from './DetailPreviewSlice';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -29,18 +29,16 @@ const style = {
 
 function FilterModal() {
 
-    const dispatch = useDispatch();
-
+    const detailPreview = useSelector(state => state.detailPreview);
+    const table_name = detailPreview.table_name;
+    const filters = detailPreview.queryForm['filters'];
+    const fixedColumns = table_name === 'Products' ? detailPreview.fixedColumnsProducts : detailPreview.fixedColumnsCustomers;
     const [addFilter, setAddFilter] = React.useState(false);
+    const [addFilterColumn, setAddFilterColumn] = React.useState('');
     const handleAddFilterOpen = () => setAddFilter(true);
     const handleAddFilterClose = () => setAddFilter(false);
-    const handleDeleteFilter = (column) => {
-        console.log(column)
-    };
 
-    const filter_columns = [['column_one', 'string'], ['column_two', 'int'], ['column_three', 'timestamp'], ['column_four', 'string'], ['column_five', 'timestamp']]
-    const string_option = ['StartWith', 'Contains', 'EndsWith']
-    const int_option = ['Less than', 'Equal to', 'More than']
+    const dispatch = useDispatch();
 
     return (
         <Box display='flex' flexDirection='column' gap={3} sx={style} >
@@ -48,12 +46,15 @@ function FilterModal() {
                 <Typography id="modal-modal-title" variant="h6" component="h2">
                     Apply Filters
                 </Typography>
-                <CloseIcon sx={{ cursor: 'pointer' }} onClick={() => dispatch(handleAddFilterModalClose())} />
+                <CloseIcon sx={{ cursor: 'pointer' }} onClick={() => dispatch(handleAddFilterModalClose('cancel'))} />
 
             </Box>
             <Box display='flex' flexDirection='column' gap={2}>
                 <Button
-                    sx={{ width: '15%', justifyContent: 'center', textTransform: 'initial', boxShadow: 'none', gap: '0.4rem', backgroundColor: '#46596A' }}
+                    sx={{
+                        width: '15%', justifyContent: 'center', textTransform: 'initial', boxShadow: 'none', gap: '0.4rem', backgroundColor: '#46596A',
+                        "&:hover": { backgroundColor: '#46596A', boxShadow: 'none' }
+                    }}
                     variant='contained'
                     size='small'
                     onClick={handleAddFilterOpen}
@@ -70,100 +71,99 @@ function FilterModal() {
                             size='small'
                             displayEmpty
                             defaultValue=''
+                            value={addFilterColumn}
+                            onChange={(e, key) => {
+                                dispatch(handleFilterColumns({ value: e.target.value, key: key.key }));
+                                handleAddFilterClose();
+                                setAddFilter(false);
+                                setAddFilterColumn('');
+                            }
+                            }
                             renderValue={(value) => (value !== '' ? value : 'Select Column')}
                             required
                         >
-                            {filter_columns.map((opt, idx) => {
-                                return <MenuItem key={idx} sx={{ color: '#46596A' }} value={opt[0]}>{opt[0].toUpperCase()} </MenuItem>
+                            {Object.entries(fixedColumns).map(([key, value]) => {
+                                return <MenuItem key={value} sx={{ color: '#46596A' }} value={key}>{key.toUpperCase()} </MenuItem>
                             })}
 
                         </Select>
                         <DeleteOutlineIcon onClick={handleAddFilterClose} sx={{ alignSelf: 'center', cursor: 'pointer' }} fontSize='small' color='#46596A' />
                     </FormControl>
                 }
-                {filter_columns.map((val, idx) => {
-                    const columnType = val[1];
+                {filters.map((val, idx) => {
+                    const columnType = val.type;
+                    const filterType = val.filter_type;
+                    const inputText = val.value;
+                    const dateRange = val.dateRange;
                     switch (columnType) {
                         case "string":
                             return (
                                 <FormControl sx={{ width: '50%', flexDirection: 'row', gap: '1rem' }}>
                                     <NotesIcon sx={{ alignSelf: 'center' }} fontSize='small' />
-                                    <Typography border='1px solid rgba(70, 90, 105, 0.4)' borderRadius={1} padding='0.5rem' alignSelf='center' color='#46596A'>{val[0]}</Typography>
+                                    <Typography border='1px solid rgba(70, 90, 105, 0.4)' borderRadius={1} padding='0.5rem' alignSelf='center' color='#46596A'>{val.column.toUpperCase()}</Typography>
                                     <Select
                                         aria-labelledby='select-range'
                                         sx={{ width: '80%', color: '#46596A' }}
                                         size='small'
                                         displayEmpty
-                                        defaultValue=''
+                                        value={filterType}
+                                        onChange={(e) => dispatch(handleFilterTypeInputChange({ column: val.column, value: e.target.value, key: "filterType" }))}
                                         renderValue={(value) => (value !== '' ? value : 'Select Column')}
                                         required
                                     >
-                                        {string_option.map((opt, idx) => {
-                                            return <MenuItem sx={{ color: '#46596A' }} value={opt}>{opt} </MenuItem>
-                                        })}
+                                        <MenuItem sx={{ color: '#46596A' }} value='Starts With'>Starts With </MenuItem>
+                                        <MenuItem sx={{ color: '#46596A' }} value='Contains'>Contains </MenuItem>
+                                        <MenuItem sx={{ color: '#46596A' }} value='Ends With'>Ends With </MenuItem>
 
                                     </Select>
                                     <TextField
                                         required
                                         fullWidth
-                                        id={val[0]}
+                                        value={inputText}
+                                        onChange={(e) => dispatch(handleFilterTypeInputChange({ column: val.column, value: e.target.value, key: "inputText" }))}
                                         placeholder='Type word or sentences..'
                                         size="small"
                                     />
-                                    <DeleteOutlineIcon onClick={() => handleDeleteFilter(val[0])} sx={{ alignSelf: 'center', cursor: 'pointer' }} fontSize='small' color='#46596A' />
+                                    <DeleteOutlineIcon onClick={() => dispatch(handleDeleteFilter(val.column))} sx={{ alignSelf: 'center', cursor: 'pointer' }} fontSize='small' color='#46596A' />
                                 </FormControl>
                             )
                         case "int":
                             return (
                                 <FormControl sx={{ width: '45%', flexDirection: 'row', gap: '1rem' }}>
                                     <ShowChartIcon sx={{ alignSelf: 'center' }} fontSize='small' />
-                                    <Typography border='1px solid rgba(70, 90, 105, 0.4)' borderRadius={1} padding='0.5rem' alignSelf='center' color='#46596A'>{val[0]}</Typography>
+                                    <Typography border='1px solid rgba(70, 90, 105, 0.4)' borderRadius={1} padding='0.5rem' alignSelf='center' color='#46596A'>{val.column.toUpperCase()}</Typography>
                                     <Select
                                         aria-labelledby='select-range'
                                         sx={{ width: '80%', color: '#46596A' }}
                                         size='small'
                                         displayEmpty
-                                        defaultValue=''
+                                        value={filterType}
+                                        onChange={(e) => dispatch(handleFilterTypeInputChange({ column: val.column, value: e.target.value, key: "filterType" }))}
                                         renderValue={(value) => (value !== '' ? value : 'Select Column')}
                                         required
                                     >
-                                        {int_option.map((opt, idx) => {
-                                            return <MenuItem sx={{ color: '#46596A' }} value={opt}>{opt} </MenuItem>
-                                        })}
+                                        <MenuItem sx={{ color: '#46596A' }} value='Less Than'>Less Than </MenuItem>
+                                        <MenuItem sx={{ color: '#46596A' }} value='Equal to'>Equal to </MenuItem>
+                                        <MenuItem sx={{ color: '#46596A' }} value='More Than'>More Than </MenuItem>
 
                                     </Select>
                                     <TextField
                                         type='number'
                                         required
-                                        fullWidth
-                                        id={val[0]}
+                                        id={val.value}
+                                        value={inputText}
+                                        onChange={(e) => dispatch(handleFilterTypeInputChange({ column: val.column, value: e.target.value, key: "inputText" }))}
                                         placeholder='Type number..'
                                         size="small"
                                     />
-                                    <DeleteOutlineIcon onClick={() => handleDeleteFilter(val[0])} sx={{ alignSelf: 'center', cursor: 'pointer' }} fontSize='small' color='#46596A' />
+                                    <DeleteOutlineIcon onClick={() => dispatch(handleDeleteFilter(val.column))} sx={{ alignSelf: 'center', cursor: 'pointer' }} fontSize='small' color='#46596A' />
                                 </FormControl>
                             )
                         case "timestamp":
                             return (
                                 <FormControl sx={{ width: '100%', flexDirection: 'row', gap: '1rem' }}>
                                     <DateRangeIcon sx={{ alignSelf: 'center' }} fontSize='small' />
-                                    <Typography border='1px solid rgba(70, 90, 105, 0.4)' borderRadius={1} padding='0.5rem' alignSelf='center' color='#46596A'>{val[0]}</Typography>
-                                    <FormControl sx={{ width: '20%' }}>
-                                        <Select
-                                            aria-labelledby='select-range'
-                                            sx={{ color: '#46596A' }}
-                                            size='small'
-                                            displayEmpty
-                                            defaultValue=''
-                                            renderValue={(value) => (value !== '' ? value : 'Select Column')}
-                                            required
-                                        >
-                                            {string_option.map((opt, idx) => {
-                                                return <MenuItem sx={{ color: '#46596A' }} value={opt}>{opt} </MenuItem>
-                                            })}
-
-                                        </Select>
-                                    </FormControl>
+                                    <Typography border='1px solid rgba(70, 90, 105, 0.4)' borderRadius={1} padding='0.5rem' alignSelf='center' color='#46596A'>{val.column.toUpperCase()}</Typography>
                                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                                         <DemoContainer sx={{ padding: 'unset' }}
                                             components={['SingleInputDateRangeField', 'SingleInputDateRangeField']}
@@ -171,11 +171,13 @@ function FilterModal() {
                                             <SingleInputDateRangeField
                                                 size='small'
                                                 placeholder="Date Range..."
+                                                value={dateRange}
+                                                onChange={(e) => dispatch(handleFilterTypeInputChange({ column: val.column, value: e, key: "dateRangeInput" }))}
                                                 sx={{ color: '#46596A' }}
                                             />
                                         </DemoContainer>
                                     </LocalizationProvider>
-                                    <DeleteOutlineIcon onClick={() => handleDeleteFilter(val[0])} sx={{ alignSelf: 'center', cursor: 'pointer' }} fontSize='small' color='#46596A' />
+                                    <DeleteOutlineIcon onClick={() => dispatch(handleDeleteFilter(val.column))} sx={{ alignSelf: 'center', cursor: 'pointer' }} fontSize='small' color='#46596A' />
                                 </FormControl>
                             )
                     }
@@ -186,9 +188,12 @@ function FilterModal() {
             >
                 <Box display='flex' gap={3} flexDirection='row-reverse'>
                     <Button
-                        sx={{ justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', gap: '0.4rem', backgroundColor: 'text.main' }}
+                        sx={{
+                            justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', gap: '0.4rem', backgroundColor: 'text.main',
+                            "&:hover": { backgroundColor: 'text.main', boxShadow: 'none' }
+                        }}
                         variant='contained'
-
+                        onClick={() => dispatch(handleAddFilterModalClose('apply'))}
                     >
                         <Typography color='white.main'>
                             Apply
@@ -196,9 +201,12 @@ function FilterModal() {
 
                     </Button>
                     <Button
-                        sx={{ justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', border: '1px solid #FF0081', gap: '0.4rem', backgroundColor: 'transparent' }}
+                        sx={{
+                            justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', border: '1px solid #FF0081', gap: '0.4rem', backgroundColor: 'transparent',
+                            "&:hover": { backgroundColor: 'transparent', boxShadow: 'none', border: '1px solid #FF0081' }
+                        }}
                         variant='outlined'
-
+                        onClick={() => dispatch(handleAddFilterModalClose('cancel'))}
                     >
                         <Typography color='text.main'>
                             Cancel

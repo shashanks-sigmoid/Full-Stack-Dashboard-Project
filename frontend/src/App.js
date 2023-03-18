@@ -52,7 +52,7 @@ function App() {
             <Grid height='100%' item xs={2} md={2} padding='1rem'>
               <SideBar />
             </Grid>
-            <Grid display='flex' flexDirection='column' height='100%' item xs={10} md={10} borderLeft='1px solid gray' padding='1rem'>
+            <Grid display='flex' flexDirection='column' height='100%' item xs={10} md={10} borderLeft='1px solid gray' padding='1rem 1rem 0 1rem'>
               {toggle ? <DetailPreview /> : <SavedQueries />}
             </Grid>
             <Grid item xs={12} md={12}>

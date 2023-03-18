@@ -4,52 +4,39 @@ import {
 } from '@mui/material'
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { handleTableNameOnChange, handleAddFilterModalOpen, handleAddFilterModalClose } from './DetailPreviewSlice';
+import {
+    handleTableNameOnChange, handleAddFilterModalOpen,
+    handleAddFilterModalClose, handleInputChange, handleSelectClearChange,
+    fetchColumn, handleDeleteFilter, handleCheckBoxInputChange, handleOnSubmit
+} from './DetailPreviewSlice';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
+import NotesIcon from '@mui/icons-material/Notes';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import AddIcon from '@mui/icons-material/Add';
 import ErrorIcon from '@mui/icons-material/Error';
 import FilterModal from './FilterModal';
-import ChooseTable from '../../images/tablechoose.svg'
-import axios from 'axios';
+import ChooseTable from '../../images/tablechoose.svg';
 
 function TableForm() {
 
     const detailPreview = useSelector(state => state.detailPreview);
     const table_name = detailPreview.table_name;
+    const query_data = detailPreview.queryForm.query_data;
+    const filters = detailPreview.queryForm.filters;
+    const columns = detailPreview.queryForm.columns;
+    const fixedColumns = table_name === 'Products' ? detailPreview.fixedColumnsProducts : detailPreview.fixedColumnsCustomers;
+    const allColumns = detailPreview.allColumns;
+    const sorted_by = detailPreview.queryForm.sorted_by;
+    const limit = detailPreview.queryForm.limit;
     const addFilterModal = detailPreview.addFilterModal;
     const dispatch = useDispatch();
 
-    const [columns, setColumns] = React.useState([])
-
     useEffect(() => {
-        if (table_name) {
-            axios
-                .get('http://localhost:5051/column_name/', {
-                    params: {
-                        table_name: "customers",
-                        schema_name: "public"
-                    },
-                })
-                .then(response => {
-                    console.log(response.data.data)
-                    const arr = []
-                    response.data.data.forEach(element => {
-                        arr.push((element[0].charAt(0).toUpperCase() + element[0].slice(1)))
-                    });
-                    setColumns(arr);
-                    console.log(arr, columns)
-
-                })
-                .catch((e) => console.log(e.message))
-        }
-        else {
-            setColumns([])
-        }
-
-    }, [table_name])
+        dispatch(fetchColumn(table_name));
+    }, [dispatch, table_name]);
 
     return (
         <Box>
@@ -73,7 +60,11 @@ function TableForm() {
                                     required
                                     fullWidth
                                     id="query-id"
+                                    value={query_data}
                                     placeholder='Untitled Query - 1'
+                                    onChange={(e) =>
+                                        dispatch(handleInputChange({ key: "query_data", value: e.target.value }))
+                                    }
                                     size="small"
                                 />
                             </FormControl>
@@ -153,6 +144,7 @@ function TableForm() {
                                         }}
                                         variant='contained'
                                         size='small'
+                                        onClick={() => dispatch(handleSelectClearChange('select'))}
                                     > <Typography variant='subtitle' color='#46596A'>
                                             Select All
                                         </Typography>
@@ -171,6 +163,7 @@ function TableForm() {
                                         }}
                                         variant='contained'
                                         size='small'
+                                        onClick={() => dispatch(handleSelectClearChange('cancel'))}
                                     > <Typography variant='subtitle' color='#46596A'>
                                             Clear All
                                         </Typography>
@@ -182,22 +175,27 @@ function TableForm() {
                                     container
                                     rowSpacing={0}
                                     columnSpacing={1}
-                                    padding={1}
                                     marginTop={1}
+                                    padding={1}
                                 >
-                                    {columns.map((opt, idx) => {
+                                    {allColumns?.map((opt, idx) => {
+                                        let checked = columns?.includes(opt[0]);
                                         return (<Grid
                                             item xs={2.4}
                                             key={idx}
+                                            paddingLeft='unset'
                                             borderRight={(idx + 1) % 5 === 0 ? 'none' : '1px dashed #46596A'}
                                         >
                                             <FormControlLabel
-                                                sx={{ display: 'flex', justifyContent: 'space-between', margin: '0 1rem' }}
+                                                sx={{ display: 'flex', justifyContent: 'space-between', margin: '0 0', padding: '0 0.5rem' }}
                                                 key={idx}
-                                                value={opt}
-                                                label={<Box display='flex' gap={0.5} color='#46596A'>{idx % 2 === 0 ? <ShowChartIcon fontSize='small' /> : <DateRangeIcon fontSize='small' />} {opt}</Box>}
-                                                control={<Checkbox checked
-                                                    value={opt}
+                                                value={opt[0]}
+                                                label={<Box display='flex' gap={0.5} color='#46596A' overflow='hidden'>{opt[1] === 'character varying'
+                                                    ? <NotesIcon sx={{ alignSelf: 'center' }} fontSize='small' />
+                                                    : (opt[1] === 'bigint' ? <ShowChartIcon sx={{ alignSelf: 'center' }} fontSize='small' /> : <DateRangeIcon sx={{ alignSelf: 'center' }} fontSize='small' />)}
+                                                    {opt[0].length >= 20 ? opt[0].slice(0, 16) : opt[0]}</Box>}
+                                                control={<Checkbox checked={checked}
+                                                    value={opt[0]}
                                                     size="small"
                                                     sx={{
                                                         '&.Mui-checked': {
@@ -206,6 +204,16 @@ function TableForm() {
                                                     }}
                                                 />}
                                                 labelPlacement="start"
+                                                onChange={(events) =>
+                                                    dispatch(
+                                                        handleCheckBoxInputChange({
+                                                            key: 'columns',
+                                                            val: events.target.value,
+                                                            checked: !checked
+                                                        })
+                                                    )
+                                                }
+
                                             />
                                         </Grid>)
                                     })}
@@ -221,9 +229,12 @@ function TableForm() {
                             Applied Filters
                         </FormLabel>
                         <Box display='flex' gap={3}>
-                            <Typography color='text.main' fontSize='0.75rem' alignSelf='center'>No Filters Applied</Typography>
+                            {filters.length === 0 && <Typography color='text.main' fontSize='0.75rem' alignSelf='center'>No Filters Applied</Typography>}
                             <Button
-                                sx={{ justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', gap: '0.4rem', backgroundColor: '#46596A' }}
+                                sx={{
+                                    justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', gap: '0.4rem', backgroundColor: '#46596A',
+                                    "&:hover": { backgroundColor: '#46596A', boxShadow: 'none' }
+                                }}
                                 variant='contained'
                                 size='small'
                                 onClick={() => dispatch(handleAddFilterModalOpen())}
@@ -234,12 +245,40 @@ function TableForm() {
                             </Button>
                             <Modal
                                 open={addFilterModal}
-                                onClose={() => dispatch(handleAddFilterModalClose())}
+                                onClose={() => dispatch(handleAddFilterModalClose('cancel'))}
                                 aria-labelledby="modal-modal-title"
                                 aria-describedby="modal-modal-description"
                             >
                                 <FilterModal />
                             </Modal>
+                            {filters.map((addedFilter, idx) => {
+                                return (
+                                    <Button
+                                        sx={{
+                                            justifyContent: 'start',
+                                            textTransform: 'initial',
+                                            boxShadow: 'none',
+                                            gap: '0.4rem',
+                                            borderRadius: '8px',
+                                            backgroundColor: 'rgba(70, 90, 105, 0.2)',
+                                            ':hover': {
+                                                backgroundColor: 'rgba(70, 90, 105, 0.2)',
+                                                boxShadow: 'none'
+                                            }
+                                        }}
+                                        variant='contained'
+                                        size='small'
+                                    > <Typography variant='subtitle' color='#46596A'>
+                                            <Box display='flex' gap={1}>
+                                                {addedFilter.type === 'string' ? <NotesIcon sx={{ alignSelf: 'center' }} fontSize='small' />
+                                                    : (addedFilter.type === 'int' ? <ShowChartIcon sx={{ alignSelf: 'center' }} fontSize='small' /> : <DateRangeIcon sx={{ alignSelf: 'center' }} fontSize='small' />)}
+                                                {addedFilter.column.toUpperCase()}
+                                                <CloseIcon onClick={() => dispatch(handleDeleteFilter(addedFilter.column))} sx={{ alignSelf: 'center' }} fontSize='small' />
+                                            </Box>
+                                        </Typography>
+                                    </Button>
+                                )
+                            })}
                         </Box>
 
                     </FormControl>
@@ -256,12 +295,13 @@ function TableForm() {
                                     sx={{ color: '#46596A' }}
                                     size='small'
                                     displayEmpty
-                                    defaultValue=''
-                                    renderValue={(value) => (value !== '' ? value : 'Select Column')}
+                                    value={sorted_by[0]}
+                                    onChange={(e) => dispatch(handleInputChange({ key: "sorted_by", value: [e.target.value, sorted_by[1]] }))}
+                                    renderValue={(value) => (value !== '' ? value.toUpperCase() : 'Select Column')}
                                     required
                                 >
-                                    {columns.map((opt, idx) => {
-                                        return <MenuItem sx={{ color: '#46596A' }} value={opt}>{opt.toUpperCase()} </MenuItem>
+                                    {Object.entries(fixedColumns).map(([key, value]) => {
+                                        return <MenuItem sx={{ color: '#46596A' }} value={key}>{key.toUpperCase()} </MenuItem>
                                     })}
 
                                 </Select>
@@ -272,11 +312,12 @@ function TableForm() {
                                     sx={{ color: '#46596A' }}
                                     size='small'
                                     displayEmpty
-                                    defaultValue='Ascending'
+                                    value={sorted_by[1]}
+                                    onChange={(e) => dispatch(handleInputChange({ key: "sorted_by", value: [sorted_by[0], e.target.value] }))}
                                     required
                                 >
-                                    <MenuItem sx={{ color: '#46596A' }} value='Ascending'>Ascending </MenuItem>
-                                    <MenuItem sx={{ color: '#46596A' }} value='Descending'>Descending </MenuItem>
+                                    <MenuItem sx={{ color: '#46596A' }} value='0'>Ascending </MenuItem>
+                                    <MenuItem sx={{ color: '#46596A' }} value='1'>Descending </MenuItem>
 
                                 </Select>
                             </FormControl>
@@ -294,6 +335,10 @@ function TableForm() {
                                 <RadioGroup
                                     aria-labelledby='radio-buttons-records'
                                     defaultValue='50'
+                                    value={limit}
+                                    onChange={(e) =>
+                                        dispatch(handleInputChange({ key: "limit", value: e.target.value }))
+                                    }
                                     name="radio-buttons-records"
                                 >
                                     <FormControlLabel
@@ -306,7 +351,7 @@ function TableForm() {
                                     />
                                     <FormControlLabel
 
-                                        value='all'
+                                        value='0'
                                         fontSize='0.75rem'
                                         label='Full Data Dump in CSV'
                                         sx={{ color: '#46596A' }}
@@ -322,7 +367,10 @@ function TableForm() {
                     >
                         <Box display='flex' gap={3} flexDirection='row-reverse'>
                             <Button
-                                sx={{ justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', gap: '0.4rem', backgroundColor: 'text.main' }}
+                                sx={{
+                                    justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', gap: '0.4rem', backgroundColor: 'text.main',
+                                    "&:hover": { backgroundColor: 'text.main', boxShadow: 'none' }
+                                }}
                                 variant='contained'
 
                             >
@@ -332,9 +380,12 @@ function TableForm() {
 
                             </Button>
                             <Button
-                                sx={{ justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', border: '1px solid #FF0081', gap: '0.4rem', backgroundColor: 'transparent' }}
+                                sx={{
+                                    justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', border: '1px solid #FF0081', gap: '0.4rem',
+                                    backgroundColor: 'transparent', "&:hover": { backgroundColor: 'transparent', boxShadow: 'none', border: '1px solid #FF0081' }
+                                }}
                                 variant='outlined'
-
+                                onClick={() => dispatch(handleOnSubmit())}
                             >
                                 <Typography color='text.main'>
                                     Save Query
@@ -342,9 +393,12 @@ function TableForm() {
 
                             </Button>
                             <Button
-                                sx={{ justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', border: '1px solid #FF0081', gap: '0.4rem', backgroundColor: 'transparent' }}
+                                sx={{
+                                    justifyContent: 'start', textTransform: 'initial', boxShadow: 'none', border: '1px solid #FF0081', gap: '0.4rem',
+                                    backgroundColor: 'transparent', "&:hover": { backgroundColor: 'transparent', boxShadow: 'none', border: '1px solid #FF0081' }
+                                }}
                                 variant='outlined'
-
+                                onClick={() => dispatch(handleTableNameOnChange({ value: '' }))}
                             >
                                 <Typography color='text.main'>
                                     Cancel
@@ -359,7 +413,7 @@ function TableForm() {
                     <Box component='img' width='210px' height='208px' margin='auto' src={ChooseTable} alt="Choose Table" />
                 </Box>
             }
-        </Box>
+        </Box >
     )
 }
 

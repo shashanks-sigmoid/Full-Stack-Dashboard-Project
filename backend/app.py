@@ -30,11 +30,10 @@ def index():
   
     return {"data":data}
 
-@app.route('/column_name/')
+@app.route('/column_name', methods=['POST'])
 def column_name():
-    table_name = request.args.get('table_name')
-    schema_name = request.args.get('schema_name')
-    print(table_name,schema_name)
+    table_name = request.json.get("table_name")
+    print(table_name)
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
                             user=os.getenv('USER'),
                             password=os.getenv('PASSWORD'), 
@@ -42,7 +41,7 @@ def column_name():
 
     cur = conn.cursor()
     # print("hello")
-    cur.execute(f"SELECT Column_name FROM information_schema.columns WHERE table_schema = '{schema_name}' AND table_name = '{table_name}';")
+    cur.execute(f"SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{table_name}';")
     data = cur.fetchall()
     cur.close()
     conn.close()

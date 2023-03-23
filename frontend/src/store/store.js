@@ -3,6 +3,7 @@ import SideBarReducer from '../features/sidebar/SideBarSlice';
 import DetailPreviewReducer from '../features/details/DetailPreviewSlice';
 import LoadDataReducer from '../features/details/LoadDataSlice';
 import SignInReducer from '../features/user/SignInSlice';
+import SavedQueryReducer from '../features/details/SavedQuerySlice';
 import storage from 'redux-persist/lib/storage';
 import {
     persistStore,
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
     detailPreview: DetailPreviewReducer,
     loadData: LoadDataReducer,
     signIn: SignInReducer,
+    savedQuery: SavedQueryReducer,
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

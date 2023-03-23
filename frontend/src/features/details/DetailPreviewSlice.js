@@ -48,6 +48,17 @@ export const fetchColumn = createAsyncThunk("/fetchColumn", (table_name) => {
   return data;
 });
 
+export const fetchSavedDataById = createAsyncThunk("/fetchSavedDataById", (id) => {
+    console.log("sgdhgh");
+    let data = axios({
+      method: "get",
+      url: `/get_saved_data_by_id/${id}`,
+      headers: { "Content-Type": "application/json" },
+    }).then((response) => response.data);
+    return data;
+  });
+  
+
 const DetailPreviewSlice = createSlice({
   name: "detailPreview",
   initialState,
@@ -217,6 +228,27 @@ const DetailPreviewSlice = createSlice({
       state.loading = false;
       state.inputs = [];
       state.error = action.error.message;
+    });
+    builder.addCase(fetchSavedDataById.pending, (state) => {
+        state.loading = true;
+      });
+    builder.addCase(fetchSavedDataById.fulfilled, (state, action) => {
+        state.loading = false;
+        let data = action.payload;
+        // console.log(data);
+        // console.log(data.data[0][0]["table_name"], data.data[0][1], data.data[0][0]["limit"])
+        state.table_name = data.data[0][0].table_name;
+        state.queryForm.query_data = data.data[0][1];
+        state.queryForm.limit = data.data[0][0].limit;
+        state.queryForm.sorted_by = data.data[0][0].sorted_by;
+        state.queryForm.columns = data.data[0][0].column;
+        state.queryForm.filters = data.data[0][0].filter;
+        state.error = "";
+    });
+    builder.addCase(fetchSavedDataById.rejected, (state, action) => {
+        state.loading = false;
+        state.inputs = [];
+        state.error = action.error.message;
     });
   },
 });

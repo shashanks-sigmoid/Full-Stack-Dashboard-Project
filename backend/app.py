@@ -96,7 +96,7 @@ def logout():
   
 
 @app.post('/column_name')
-@jwt_required()
+# @jwt_required()
 def column_name():
     table_name = request.json.get("table_name")
 
@@ -128,7 +128,7 @@ def save_csv(filename,column_name,row_data):
   
 
 @app.post('/filter')
-@jwt_required()
+# @jwt_required()
 def filter():
     filter_data=request.json
     print("filter_data",filter_data)
@@ -198,11 +198,116 @@ def filter():
     return result
     
 @app.post('/save_data')
-@jwt_required()
+# @jwt_required()
 def save_data():
+    # save_data=request.json
+    # print("saved_data",save_data)
+    # col = ', '.join(list(save_data.keys()))
+    # val = ', '.join(str(x) for x in save_data.values())
+    
+    # print(keys)
+    # print(values)
+
     save_data=request.json
     print("saved_data",save_data)
+    print(type(save_data))
+    col=",".join(list(save_data.keys()))
+    values=list(save_data.values())
+    val=""
+    for i in range(5):
+      if i!=4:
+        val+=f"'{values[i]}'"
+        val+=","
+      else:
+        val+=f"'{json.dumps(values[i])}'"
+      
+    
+    query=f"INSERT INTO public.save_query ({col}) VALUES ({val})"
+    print("query",query)
+    
+    conn = psycopg2.connect(database=os.getenv('DATABASE'), 
+                        user=os.getenv('USER'),
+                        password=os.getenv('PASSWORD'), 
+                        host="localhost", port="5432")
+
+    cur = conn.cursor()
+    cur.execute(query)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    
     return {"data":save_data}
+    
+@app.get('/get_all_saved_data')
+def get_all_saved_data():
+    
+    query=f"SELECT * FROM public.save_query"
+    print("query",query)
+    
+    conn = psycopg2.connect(database=os.getenv('DATABASE'), 
+                        user=os.getenv('USER'),
+                        password=os.getenv('PASSWORD'), 
+                        host="localhost", port="5432")
+
+    cur = conn.cursor()
+    cur.execute(query)
+    data = cur.fetchall()
+    cur.close()
+    conn.close()
+    # print(data)
+    return {"data":data}
+  
+  
+@app.get('/get_saved_data_by_id/<id>')
+def get_saved_data_by_id(id):
+    query=f"SELECT query, query_name FROM public.save_query WHERE id={id}"
+    print("query",query)
+    
+    conn = psycopg2.connect(database=os.getenv('DATABASE'), 
+                        user=os.getenv('USER'),
+                        password=os.getenv('PASSWORD'), 
+                        host="localhost", port="5432")
+
+    cur = conn.cursor()
+    cur.execute(query)
+    data = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    return {"data":data}
+
+@app.patch('/update_query/<id>')
+def update_query(id):
+    id = id
+    updated_data = request.json
+
+    col=",".join(list(save_data.keys()))
+    values=list(save_data.values())
+    val=""
+    for i in range(5):
+      if i!=4:
+        val+=f"'{values[i]}'"
+        val+=","
+      else:
+        val+=f"'{json.dumps(values[i])}'"
+      
+    sql = f"SELECT * FROM public.save_query WHERE id={id}"
+
+    conn = psycopg2.connect(database=os.getenv('DATABASE'), 
+                        user=os.getenv('USER'),
+                        password=os.getenv('PASSWORD'), 
+                        host="localhost", port="5432")
+
+    cur = conn.cursor()
+    cur.execute(sql)
+    data = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return data
+    
+
 
 if __name__ == "__main__":
     app.run(port=5051, debug = True)

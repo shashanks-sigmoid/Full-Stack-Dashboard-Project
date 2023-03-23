@@ -1,4 +1,4 @@
-import React from "react";
+import React,  { useEffect } from "react";
 import {
   Box,
   Typography,
@@ -22,6 +22,10 @@ import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import ListIcon from "@mui/icons-material/List";
 import GridViewIcon from "@mui/icons-material/GridView";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { fetchSavedData } from './SavedQuerySlice';
+import { handleToggleQueryData } from '../sidebar/SideBarSlice';
+import { fetchSavedDataById } from './DetailPreviewSlice';
+import { useSelector, useDispatch } from "react-redux";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -84,9 +88,20 @@ const originalRows = [
 ];
 
 function SavedQueries() {
+
   const [alignment, setAlignment] = React.useState("left");
   const [searched, setSearched] = React.useState("");
-  const [rows, setRows] = React.useState(originalRows);
+
+  const savedQuery = useSelector((state) => state.savedQuery);
+  const savedData = savedQuery.savedData;
+
+  const [rows, setRows] = React.useState(savedData);
+
+  const dispatch = useDispatch()
+
+  useEffect(()=>{
+    dispatch(fetchSavedData())
+  },[dispatch])
 
   const handleAlignment = (event, newAlignment) => {
     if (newAlignment !== null) {
@@ -96,10 +111,10 @@ function SavedQueries() {
 
   const requestSearch = (searchedVal) => {
     if (!searchedVal) {
-      setRows(originalRows);
+      setRows(savedData);
     } else {
-      const filteredRows = originalRows.filter((row) => {
-        return row.query_name.toLowerCase().includes(searchedVal.toLowerCase());
+      const filteredRows = savedData.filter((row) => {
+        return row[1].toLowerCase().includes(searchedVal.toLowerCase());
       });
       setRows(filteredRows);
     }
@@ -201,18 +216,21 @@ function SavedQueries() {
           </TableHead>
           <TableBody>
             {rows.map((row, ind) => (
-              <StyledTableRow key={ind}>
+              <StyledTableRow key={ind} onClick={()=>{
+                dispatch(fetchSavedDataById(row[0]));
+                dispatch(handleToggleQueryData());
+                }}>
                 <StyledTableCell component="th" scope="row">
-                  {row.query_name}
+                  {row[1]}
                 </StyledTableCell>
                 <StyledTableCell align="center">
-                  {row.created_on}
+                  {row[2]}
                 </StyledTableCell>
                 <StyledTableCell align="center">
-                  {row.last_queried_on}
+                  {row[3]}
                 </StyledTableCell>
                 <StyledTableCell align="center">
-                  {row.request_type}
+                  {row[4]}
                 </StyledTableCell>
                 <StyledTableCell align="right">
                   <MoreVertIcon />

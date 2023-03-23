@@ -89,6 +89,7 @@ const SignInSlice = createSlice({
                 password: '',
             }
             state.error = "";
+            window.location.reload();
         });
         builder.addCase(handleLogOutSubmit.rejected, (state, action) => {
             state.loading = false;

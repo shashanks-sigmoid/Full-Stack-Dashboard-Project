@@ -1,10 +1,7 @@
-import { ThemeProvider, createTheme, CssBaseline, Grid, Box } from "@mui/material";
-import DetailPreview from "./features/details/DetailPreview";
-import { useSelector } from 'react-redux'
-import SavedQueries from "./features/details/SavedQueries";
-import SideBar from "./features/sidebar/SideBar";
-import ResponsiveAppBar from "./features/user/ResponsiveAppBar";
-import FooterCopyRight from "./features/footers/FooterCopyRight";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
+import SignIn from "./features/user/SignIn";
+import Dashboard from "./features/user/Dashboard";
 
 
 const theme = createTheme({
@@ -34,32 +31,15 @@ const theme = createTheme({
 
 function App() {
 
-  const sideBar = useSelector(state => state.sideBar);
-  const toggle = sideBar.toggle;
-
   return (
     <CssBaseline>
       <ThemeProvider theme={theme}>
-        <Box>
-          <Grid
-            container
-            rowSpacing={0}
-            height='100%'
-          >
-            <Grid item xs={12} md={12} borderBottom='1px solid gray'>
-              <ResponsiveAppBar />
-            </Grid>
-            <Grid height='100%' item xs={2} md={2} padding='1rem'>
-              <SideBar />
-            </Grid>
-            <Grid display='flex' flexDirection='column' height='100%' item xs={10} md={10} borderLeft='1px solid gray' padding='1rem 1rem 0 1rem'>
-              {toggle ? <DetailPreview /> : <SavedQueries />}
-            </Grid>
-            <Grid item xs={12} md={12}>
-              <FooterCopyRight />
-            </Grid>
-          </Grid>
-        </Box>
+        <BrowserRouter>
+          <Routes>
+            <Route exact path="/" element={<SignIn/>}/>
+            <Route exact path="/dashboard" element={<Dashboard/>} />
+          </Routes>
+        </BrowserRouter>
       </ThemeProvider>
     </CssBaseline>
   );

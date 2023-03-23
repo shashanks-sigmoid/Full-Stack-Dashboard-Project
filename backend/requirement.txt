@@ -6,3 +6,6 @@ psycopg2-binary
 python-dotenv
 flask-cors
 python-dotenv
+werkzeug.security
+psycopg2.extras
+flask-jwt-extended

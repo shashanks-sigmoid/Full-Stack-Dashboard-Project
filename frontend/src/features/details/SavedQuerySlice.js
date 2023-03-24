@@ -28,7 +28,7 @@ const SavedQuerySlice = createSlice({
     builder.addCase(fetchSavedData.fulfilled, (state, action) => {
       state.loading = false;
       let data = action.payload;
-    //   state.data = [];
+    //   state.savedData = [];
       state.savedData = data.data;
       state.error = "";
     });

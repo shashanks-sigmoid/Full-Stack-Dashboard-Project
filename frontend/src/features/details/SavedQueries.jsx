@@ -57,13 +57,14 @@ function SavedQueries() {
 
   const savedQuery = useSelector((state) => state.savedQuery);
   const savedData = savedQuery.savedData;
+//   const loading = savedQuery.loading;
 
-  const [rows, setRows] = React.useState(savedData);
+  const [rows, setRows] = React.useState(()=>savedData);
 
   const dispatch = useDispatch()
 
   useEffect(()=>{
-    dispatch(fetchSavedData())
+    dispatch(fetchSavedData());
   },[dispatch])
 
   const handleAlignment = (event, newAlignment) => {
@@ -74,12 +75,12 @@ function SavedQueries() {
 
   const requestSearch = (searchedVal) => {
     if (!searchedVal) {
-      setRows(savedData);
+      setRows(()=>savedData);
     } else {
       const filteredRows = savedData.filter((row) => {
         return row[1].toLowerCase().includes(searchedVal.toLowerCase());
       });
-      setRows(filteredRows);
+      setRows(()=>filteredRows);
     }
   };
 
@@ -114,7 +115,7 @@ function SavedQueries() {
             onInput={(e) => {
               requestSearch(e.target.value);
             }}
-            onChange={(e) => setSearched(e.target.value)}
+            onChange={(e) => setSearched(()=>e.target.value)}
           />
         </FormControl>
         <Box display="flex" gap="1rem">
@@ -178,28 +179,45 @@ function SavedQueries() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row, ind) => (
-              <StyledTableRow key={ind} onClick={()=>{
-                dispatch(fetchSavedDataById(row[0]));
-                dispatch(handleToggleQueryData());
-                }}>
-                <StyledTableCell component="th" scope="row">
-                  {row[1]}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  {row[2]}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  {row[3]}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  {row[4]}
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  <MoreVertIcon />
-                </StyledTableCell>
-              </StyledTableRow>
-            ))}
+          {searched === ""
+              ? savedData.map((row, ind) => (
+                  <StyledTableRow
+                    key={ind}
+                    onClick={() => {
+                      dispatch(fetchSavedDataById(row[0]));
+                      dispatch(handleToggleQueryData());
+                    }}
+                  >
+                    <StyledTableCell component="th" scope="row">
+                      {row[1]}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">{row[2]}</StyledTableCell>
+                    <StyledTableCell align="center">{row[3]}</StyledTableCell>
+                    <StyledTableCell align="center">{row[4]}</StyledTableCell>
+                    <StyledTableCell align="right">
+                      <MoreVertIcon />
+                    </StyledTableCell>
+                  </StyledTableRow>
+                ))
+              : rows.map((row, ind) => (
+                  <StyledTableRow
+                    key={ind}
+                    onClick={() => {
+                      dispatch(fetchSavedDataById(row[0]));
+                      dispatch(handleToggleQueryData());
+                    }}
+                  >
+                    <StyledTableCell component="th" scope="row">
+                      {row[1]}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">{row[2]}</StyledTableCell>
+                    <StyledTableCell align="center">{row[3]}</StyledTableCell>
+                    <StyledTableCell align="center">{row[4]}</StyledTableCell>
+                    <StyledTableCell align="right">
+                      <MoreVertIcon />
+                    </StyledTableCell>
+                  </StyledTableRow>
+                ))}
           </TableBody>
         </Table>
       </TableContainer>

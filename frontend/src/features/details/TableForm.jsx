@@ -42,6 +42,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import FilterModal from "./FilterModal";
 import ChooseTable from "../../images/tablechoose.svg";
 import dayjs from "dayjs";
+import { fetchSavedData } from "./SavedQuerySlice";
 
 function TableForm() {
 
@@ -532,7 +533,9 @@ function TableForm() {
                   },
                 }}
                 variant="outlined"
-                onClick={() => dispatch(updateDataById({id : queryId, bodyData: updatedData}))}
+                onClick={() => { 
+                    dispatch(updateDataById({id : queryId, bodyData: updatedData}));
+                }}
               >
                 <Typography color="text.main">Update Query</Typography>
               </Button> :

@@ -1,0 +1,36 @@
+version: '3.5'
+
+services:
+  db:
+    image: postgres:10.5
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./db/db.env
+    volumes:
+      - "./db:/app/db"
+
+  flask-api:
+    restart: always
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+    depends_on:
+      - "db"
+
+  client:
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - "flask-api"

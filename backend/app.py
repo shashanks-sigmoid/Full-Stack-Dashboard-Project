@@ -4,8 +4,8 @@ import json
 from datetime import datetime, timezone, timedelta
 import psycopg2
 import psycopg2.extras
-from flask import Flask, session, request, jsonify,Response
-from werkzeug.security import check_password_hash
+from flask import Flask, render_template, session, request, redirect, url_for,jsonify,Response
+from werkzeug.security import generate_password_hash, check_password_hash
 import csv
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, unset_jwt_cookies, jwt_required, JWTManager
 from flask_cors import CORS
@@ -45,7 +45,7 @@ def login():
     _json = request.json
     _email = _json['email']
     _password = _json['password']
-
+    print(_email,_password,generate_password_hash(_password))
     access_token = create_access_token(identity=_email)
   
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
@@ -58,7 +58,7 @@ def login():
         #check user exists          
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
           
-        sql = "SELECT * FROM users WHERE email=%s"
+        sql = "SELECT * FROM final_project.users WHERE email=%s"
         sql_where = (_email,)
           
         cursor.execute(sql, sql_where)
@@ -108,7 +108,7 @@ def column_name():
 
     cur = conn.cursor()
     # print("hello")
-    cur.execute(f"SELECT Column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{table_name}';")
+    cur.execute(f"SELECT Column_name FROM information_schema.columns WHERE table_schema = 'final_project' AND table_name = '{table_name}';")
     data = cur.fetchall()
     cur.close()
     conn.close()
@@ -185,7 +185,7 @@ def filter():
                         host="db", port="5432")
 
     cur = conn.cursor()
-    cur.execute(f"SELECT {column} FROM public.{table_name}{filter_query}")
+    cur.execute(f"SELECT {column} FROM final_project.{table_name}{filter_query}")
     data = cur.fetchall()
     cur.close()
     conn.close()
@@ -199,15 +199,7 @@ def filter():
     
 @app.post('/save_data')
 # @jwt_required()
-def save_data():
-    # save_data=request.json
-    # print("saved_data",save_data)
-    # col = ', '.join(list(save_data.keys()))
-    # val = ', '.join(str(x) for x in save_data.values())
-    
-    # print(keys)
-    # print(values)
-
+def save_new_data():
     save_data=request.json
     print("saved_data",save_data)
     print(type(save_data))
@@ -222,7 +214,7 @@ def save_data():
         val+=f"'{json.dumps(values[i])}'"
       
     
-    query=f"INSERT INTO public.save_query ({col}) VALUES ({val})"
+    query=f"INSERT INTO final_project.save_query ({col}) VALUES ({val})"
     print("query",query)
     
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
@@ -232,17 +224,16 @@ def save_data():
 
     cur = conn.cursor()
     cur.execute(query)
-
     conn.commit()
     cur.close()
     conn.close()
     
     return {"data":save_data}
-    
+  
 @app.get('/get_all_saved_data')
 def get_all_saved_data():
     
-    query=f"SELECT * FROM public.save_query"
+    query=f"SELECT * FROM final_project.save_query"
     print("query",query)
     
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
@@ -255,13 +246,13 @@ def get_all_saved_data():
     data = cur.fetchall()
     cur.close()
     conn.close()
-    # print(data)
+    
     return {"data":data}
   
   
 @app.get('/get_saved_data_by_id/<id>')
 def get_saved_data_by_id(id):
-    query=f"SELECT query, query_name, id FROM public.save_query WHERE id={id}"
+    query=f"SELECT query,query_name,id FROM final_project.save_query WHERE id={id}"
     print("query",query)
     
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
@@ -274,9 +265,7 @@ def get_saved_data_by_id(id):
     data = cur.fetchall()
     cur.close()
     conn.close()
-    
     return {"data":data}
-
 
 @app.post('/update_saved_data/<id>')
 def update_saved_data(id):
@@ -284,10 +273,11 @@ def update_saved_data(id):
     update_data=request.json
     print("update_data",update_data)
     query_name=update_data["query_name"]
+    # created_on=update_data["created_on"]
     last_queried_on=update_data["last_queried_on"]
     request_type=update_data["request_type"]
     query=update_data["query"]
-    sql_query=f'''UPDATE public.save_query SET query_name='{query_name}',
+    sql_query=f'''UPDATE final_project.save_query SET query_name='{query_name}',
     last_queried_on='{last_queried_on}',
     request_type='{request_type}',
     query='{json.dumps(query)}' WHERE id={id}
@@ -306,12 +296,11 @@ def update_saved_data(id):
     conn.close()
     
     return {"data":update_data}
-    
-
+  
 
 if __name__ == "__main__":
-    app.run(port=5051, debug = True)
-  
+    port = int(os.environ.get('PORT', 5001))
+    app.run(debug=True, host='0.0.0.0', port=port)
 
 
 

@@ -25,6 +25,7 @@ import {
   handleInputChange,
   handleSelectClearChange,
   fetchColumn,
+  updateDataById,
   handleDeleteFilter,
   handleCheckBoxInputChange,
   handleOnSubmit,
@@ -40,21 +41,33 @@ import AddIcon from "@mui/icons-material/Add";
 import ErrorIcon from "@mui/icons-material/Error";
 import FilterModal from "./FilterModal";
 import ChooseTable from "../../images/tablechoose.svg";
+import dayjs from "dayjs";
 
 function TableForm() {
+
   const detailPreview = useSelector((state) => state.detailPreview);
   const table_name = detailPreview.table_name;
   const query_data = detailPreview.queryForm.query_data;
   const filters = detailPreview.queryForm.filters;
   const columns = detailPreview.queryForm.columns;
-  const fixedColumns =
-    table_name === "Products"
-      ? detailPreview.fixedColumnsProducts
-      : detailPreview.fixedColumnsCustomers;
+  const queryId = detailPreview.queryId;
+//   const fixedColumns =
+//     table_name === "Products"
+//       ? detailPreview.fixedColumnsProducts
+//       : detailPreview.fixedColumnsCustomers;
+  const isUpdated = detailPreview.isUpdated;
   const allColumns = detailPreview.allColumns;
   const sorted_by = detailPreview.queryForm.sorted_by;
   const limit = detailPreview.queryForm.limit;
   const addFilterModal = detailPreview.addFilterModal;
+
+  const updatedData = {
+    "query_name": query_data,
+    "last_queried_on": new Date().toISOString(),
+    "request_type": detailPreview.queryForm.limit === "50" ? "Instant Download" : "Bulk Download",
+    "query": {"table_name": table_name, "sorted_by": sorted_by, "column": columns, "limit": limit, "filter": filters}
+  }
+
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -68,7 +81,7 @@ function TableForm() {
           <Grid container rowSpacing={0} columnSpacing={4} fontSize="0.9rem">
             <Grid item xs={4}>
               <FormControl sx={{ gap: "0.5rem" }} fullWidth>
-                <FormLabel id="query-id">Query Data*</FormLabel>
+                <FormLabel id="query-id">Query Data<Box component='span' color='text.main'>*</Box></FormLabel>
                 <TextField
                   aria-labelledby="query-id"
                   required
@@ -90,7 +103,7 @@ function TableForm() {
             </Grid>
             <Grid item xs={3} gap={1}>
               <FormControl sx={{ gap: "0.5rem" }} fullWidth>
-                <FormLabel id="select-table">Table Name*</FormLabel>
+                <FormLabel id="select-table">Table Name<Box component='span' color='text.main'>*</Box></FormLabel>
                 <Box display="flex" gap="0.5rem">
                   <Select
                     aria-labelledby="select-table"
@@ -128,7 +141,7 @@ function TableForm() {
         <FormControl sx={{ display: "flex" }}>
           <FormControl sx={{ gap: "0.5rem", marginBottom: "2rem" }} fullWidth>
             <FormLabel id="choose-column">
-              Choose Columns that you want*
+              Choose Columns that you want<Box component='span' color='text.main'>*</Box>
             </FormLabel>
             <Box
               border="1px solid rgba(70, 90, 105, 0.5)"
@@ -380,7 +393,7 @@ function TableForm() {
             </Box>
           </FormControl>
           <FormControl sx={{ gap: "0.5rem", marginBottom: "2rem" }} fullWidth>
-            <FormLabel id="sorted-column">Data Sorted By*</FormLabel>
+            <FormLabel id="sorted-column">Data Sorted By<Box component='span' color='text.main'>*</Box></FormLabel>
             <Box display="flex" gap={3}>
               <FormControl>
                 <Select
@@ -442,7 +455,7 @@ function TableForm() {
             </Box>
           </FormControl>
           <FormControl sx={{ gap: "0.5rem", marginBottom: "2rem" }} fullWidth>
-            <FormLabel id="sorted-column">Output Format*</FormLabel>
+            <FormLabel id="sorted-column">Output Format<Box component='span' color='text.main'>*</Box></FormLabel>
             <Box display="flex" gap={3}>
               <FormControl>
                 <RadioGroup
@@ -503,6 +516,26 @@ function TableForm() {
               >
                 <Typography color="white.main">Download Data</Typography>
               </Button>
+              { isUpdated ? 
+              <Button
+                sx={{
+                  justifyContent: "start",
+                  textTransform: "initial",
+                  boxShadow: "none",
+                  border: "1px solid #FF0081",
+                  gap: "0.4rem",
+                  backgroundColor: "transparent",
+                  "&:hover": {
+                    backgroundColor: "transparent",
+                    boxShadow: "none",
+                    border: "1px solid #FF0081",
+                  },
+                }}
+                variant="outlined"
+                onClick={() => dispatch(updateDataById({id : queryId, bodyData: updatedData}))}
+              >
+                <Typography color="text.main">Update Query</Typography>
+              </Button> :
               <Button
                 sx={{
                   justifyContent: "start",
@@ -522,6 +555,7 @@ function TableForm() {
               >
                 <Typography color="text.main">Save Query</Typography>
               </Button>
+              }
               <Button
                 sx={{
                   justifyContent: "start",

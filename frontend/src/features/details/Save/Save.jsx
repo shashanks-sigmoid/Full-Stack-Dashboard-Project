@@ -9,8 +9,8 @@ const Download = () => {
   const dispatch = useDispatch();
   let bodyData = {
     query_name: detailPreview.queryForm.query_data,
-    created_on: "2022-12-03",
-    last_queried_on: "2023-03-03",
+    created_on: new Date().toISOString(),
+    last_queried_on: new Date().toISOString(),
     request_type:
       detailPreview.queryForm.limit === "50"
         ? "Instant Download"

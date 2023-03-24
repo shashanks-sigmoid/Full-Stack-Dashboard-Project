@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import dayjs from "dayjs";
 import axios from "axios";
-import { fetchData } from "./LoadDataSlice";
+// import { fetchData } from "./LoadDataSlice";
 
 const initialState = {
   table_name: "",
   allColumns: [],
+  queryId: -1,
   queryForm: {
     query_data: "",
     columns: [],
@@ -36,6 +37,7 @@ const initialState = {
   load: false,
   save: false,
   saveToggle: false,
+  isUpdated: false,
 };
 
 export const fetchColumn = createAsyncThunk("/fetchColumn", (table_name) => {
@@ -49,11 +51,22 @@ export const fetchColumn = createAsyncThunk("/fetchColumn", (table_name) => {
 });
 
 export const fetchSavedDataById = createAsyncThunk("/fetchSavedDataById", (id) => {
-    console.log("sgdhgh");
     let data = axios({
       method: "get",
       url: `/get_saved_data_by_id/${id}`,
       headers: { "Content-Type": "application/json" },
+    }).then((response) => response.data);
+    return data;
+  });
+
+export const updateDataById = createAsyncThunk("/updateDataById", (parameter) => {
+    const {id, bodyData} = parameter;
+    console.log(id, bodyData)
+    let data = axios({
+      method: "post",
+      url: `/update_saved_data/${id}`,
+      headers: { "Content-Type": "application/json" },
+      data: bodyData
     }).then((response) => response.data);
     return data;
   });
@@ -96,6 +109,7 @@ const DetailPreviewSlice = createSlice({
       state.queryForm.columns = [];
       state.queryForm.limit = "50";
       state.queryForm.sorted_by = ["", "asc"];
+      state.isUpdated = false;
     },
     handleCheckBoxInputChange: (state, action) => {
       const { key, val, checked } = action.payload;
@@ -235,17 +249,30 @@ const DetailPreviewSlice = createSlice({
     builder.addCase(fetchSavedDataById.fulfilled, (state, action) => {
         state.loading = false;
         let data = action.payload;
-        // console.log(data);
-        // console.log(data.data[0][0]["table_name"], data.data[0][1], data.data[0][0]["limit"])
         state.table_name = data.data[0][0].table_name;
         state.queryForm.query_data = data.data[0][1];
         state.queryForm.limit = data.data[0][0].limit;
         state.queryForm.sorted_by = data.data[0][0].sorted_by;
         state.queryForm.columns = data.data[0][0].column;
         state.queryForm.filters = data.data[0][0].filter;
+        state.queryId = data.data[0][2];
         state.error = "";
+        state.isUpdated = true;
     });
     builder.addCase(fetchSavedDataById.rejected, (state, action) => {
+        state.loading = false;
+        state.inputs = [];
+        state.error = action.error.message;
+    });
+    builder.addCase(updateDataById.pending, (state) => {
+        state.loading = true;
+      });
+    builder.addCase(updateDataById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = "";
+        window.location.reload()
+    });
+    builder.addCase(updateDataById.rejected, (state, action) => {
         state.loading = false;
         state.inputs = [];
         state.error = action.error.message;

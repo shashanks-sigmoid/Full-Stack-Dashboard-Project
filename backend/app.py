@@ -261,7 +261,7 @@ def get_all_saved_data():
   
 @app.get('/get_saved_data_by_id/<id>')
 def get_saved_data_by_id(id):
-    query=f"SELECT query, query_name FROM public.save_query WHERE id={id}"
+    query=f"SELECT query, query_name, id FROM public.save_query WHERE id={id}"
     print("query",query)
     
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
@@ -277,35 +277,35 @@ def get_saved_data_by_id(id):
     
     return {"data":data}
 
-@app.patch('/update_query/<id>')
-def update_query(id):
-    id = id
-    updated_data = request.json
 
-    col=",".join(list(save_data.keys()))
-    values=list(save_data.values())
-    val=""
-    for i in range(5):
-      if i!=4:
-        val+=f"'{values[i]}'"
-        val+=","
-      else:
-        val+=f"'{json.dumps(values[i])}'"
+@app.post('/update_saved_data/<id>')
+def update_saved_data(id):
       
-    sql = f"SELECT * FROM public.save_query WHERE id={id}"
-
+    update_data=request.json
+    print("update_data",update_data)
+    query_name=update_data["query_name"]
+    last_queried_on=update_data["last_queried_on"]
+    request_type=update_data["request_type"]
+    query=update_data["query"]
+    sql_query=f'''UPDATE public.save_query SET query_name='{query_name}',
+    last_queried_on='{last_queried_on}',
+    request_type='{request_type}',
+    query='{json.dumps(query)}' WHERE id={id}
+    '''
+    print("sql_query",sql_query)
+    
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
                         user=os.getenv('USER'),
                         password=os.getenv('PASSWORD'), 
                         host="localhost", port="5432")
 
     cur = conn.cursor()
-    cur.execute(sql)
-    data = cur.fetchall()
+    cur.execute(sql_query)
+    conn.commit()
     cur.close()
     conn.close()
-
-    return data
+    
+    return {"data":update_data}
     
 
 

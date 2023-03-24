@@ -50,43 +50,6 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-function createData(query_name, created_on, last_queried_on, request_type) {
-  return { query_name, created_on, last_queried_on, request_type };
-}
-
-const originalRows = [
-  createData(
-    "Brazil Campaign 10981",
-    "1 week ago",
-    "June 20, 2022",
-    "Bulk data Request"
-  ),
-  createData(
-    "Lizol Revenue Last 3 months",
-    "May 5, 2020",
-    "2 days Ago",
-    "Instant Download"
-  ),
-  createData(
-    "Brazil Campaign 10982",
-    "1 week ago",
-    "June 20, 2022",
-    "Bulk data Request"
-  ),
-  createData(
-    "Lizol Revenue Last 3 months",
-    "May 5, 2020",
-    "2 days Ago",
-    "Instant Download"
-  ),
-  createData(
-    "Brazil Campaign 10983",
-    "1 week ago",
-    "June 20, 2022",
-    "Bulk data Request"
-  ),
-];
-
 function SavedQueries() {
 
   const [alignment, setAlignment] = React.useState("left");

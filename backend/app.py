@@ -4,8 +4,8 @@ import json
 from datetime import datetime, timezone, timedelta
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template, session, request, redirect, url_for,jsonify,Response
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, session, request, jsonify,Response
+from werkzeug.security import check_password_hash
 import csv
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, unset_jwt_cookies, jwt_required, JWTManager
 from flask_cors import CORS
@@ -51,7 +51,7 @@ def login():
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
                         user=os.getenv('USER'),
                         password=os.getenv('PASSWORD'), 
-                        host="localhost", port="5432")
+                        host="db", port="5432")
 
     # print(_password)
     if _email and _password:
@@ -103,7 +103,7 @@ def column_name():
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
                         user=os.getenv('USER'),
                         password=os.getenv('PASSWORD'), 
-                        host="localhost", port="5432")
+                        host="db", port="5432")
 
 
     cur = conn.cursor()
@@ -182,7 +182,7 @@ def filter():
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
                         user=os.getenv('USER'),
                         password=os.getenv('PASSWORD'), 
-                        host="localhost", port="5432")
+                        host="db", port="5432")
 
     cur = conn.cursor()
     cur.execute(f"SELECT {column} FROM public.{table_name}{filter_query}")
@@ -228,7 +228,7 @@ def save_data():
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
                         user=os.getenv('USER'),
                         password=os.getenv('PASSWORD'), 
-                        host="localhost", port="5432")
+                        host="db", port="5432")
 
     cur = conn.cursor()
     cur.execute(query)
@@ -248,7 +248,7 @@ def get_all_saved_data():
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
                         user=os.getenv('USER'),
                         password=os.getenv('PASSWORD'), 
-                        host="localhost", port="5432")
+                        host="db", port="5432")
 
     cur = conn.cursor()
     cur.execute(query)
@@ -267,7 +267,7 @@ def get_saved_data_by_id(id):
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
                         user=os.getenv('USER'),
                         password=os.getenv('PASSWORD'), 
-                        host="localhost", port="5432")
+                        host="db", port="5432")
 
     cur = conn.cursor()
     cur.execute(query)
@@ -297,7 +297,7 @@ def update_saved_data(id):
     conn = psycopg2.connect(database=os.getenv('DATABASE'), 
                         user=os.getenv('USER'),
                         password=os.getenv('PASSWORD'), 
-                        host="localhost", port="5432")
+                        host="db", port="5432")
 
     cur = conn.cursor()
     cur.execute(sql_query)

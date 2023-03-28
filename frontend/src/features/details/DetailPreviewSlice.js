@@ -145,7 +145,7 @@ const DetailPreviewSlice = createSlice({
       const { value, key } = action.payload;
       let dataType = key.slice(2);
       state.queryForm.filters.forEach((obj, idx) => {
-        if (obj.column == value) {
+        if (obj.column === value) {
           state.queryForm.filters.splice(idx, 1);
         }
       });
@@ -249,12 +249,26 @@ const DetailPreviewSlice = createSlice({
     builder.addCase(fetchSavedDataById.fulfilled, (state, action) => {
         state.loading = false;
         let data = action.payload;
+        // console.log(data.data[0][0].filter);
         state.table_name = data.data[0][0].table_name;
         state.queryForm.query_data = data.data[0][1];
         state.queryForm.limit = data.data[0][0].limit;
         state.queryForm.sorted_by = data.data[0][0].sorted_by;
         state.queryForm.columns = data.data[0][0].column;
-        state.queryForm.filters = data.data[0][0].filter;
+        state.queryForm.filters = data.data[0][0].filter.map((element)=>{
+            switch (element.type) {
+                case "timestamp":
+                    return {
+                        'column': element.column,
+                        'dateRange': [dayjs(element.dateRange[0]),dayjs(element.dateRange[1])],
+                        'type': element.type
+                    }
+                default:
+                    return element
+            }
+        })
+        // console.log(typeof data.data[0][0].filter[0].dateRange[0])
+        // state.queryForm.filters = data.data[0][0].filter;
         state.queryId = data.data[0][2];
         state.error = "";
         state.isUpdated = true;

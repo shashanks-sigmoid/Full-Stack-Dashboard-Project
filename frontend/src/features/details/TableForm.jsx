@@ -16,7 +16,7 @@ import {
   Radio,
   Modal,
 } from "@mui/material";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   handleTableNameOnChange,
@@ -42,7 +42,6 @@ import ErrorIcon from "@mui/icons-material/Error";
 import FilterModal from "./FilterModal";
 import ChooseTable from "../../images/tablechoose.svg";
 import dayjs from "dayjs";
-import { fetchSavedData } from "./SavedQuerySlice";
 
 function TableForm() {
 
@@ -52,10 +51,6 @@ function TableForm() {
   const filters = detailPreview.queryForm.filters;
   const columns = detailPreview.queryForm.columns;
   const queryId = detailPreview.queryId;
-//   const fixedColumns =
-//     table_name === "Products"
-//       ? detailPreview.fixedColumnsProducts
-//       : detailPreview.fixedColumnsCustomers;
   const isUpdated = detailPreview.isUpdated;
   const allColumns = detailPreview.allColumns;
   const sorted_by = detailPreview.queryForm.sorted_by;
@@ -69,11 +64,26 @@ function TableForm() {
     "query": {"table_name": table_name, "sorted_by": sorted_by, "column": columns, "limit": limit, "filter": filters}
   }
 
+  const [allColumn, setAllColumn] = React.useState(allColumns)
+  const [searched, setSearched] = React.useState("");
+
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(fetchColumn(table_name));
   }, [dispatch, table_name]);
+
+
+  const columnSearch = (searchedVal) => {
+    if (!searchedVal) {
+        setAllColumn(()=>allColumns);
+    } else {
+      const filteredRows = allColumns.filter((row) => {
+        return row[0].toLowerCase().includes(searchedVal.toLowerCase());
+      });
+      setAllColumn(()=>filteredRows);
+    }
+  };
 
   return (
     <Box>
@@ -159,6 +169,11 @@ function TableForm() {
                   id="search-columns"
                   placeholder="Search Column..."
                   size="small"
+                  value={searched}
+                  onInput={(e) => {
+                        columnSearch(e.target.value);
+                    }}
+                  onChange={(e) => setSearched(()=>e.target.value)}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -225,7 +240,7 @@ function TableForm() {
                   marginTop={1}
                   padding={1}
                 >
-                  {allColumns?.map((opt, idx) => {
+                  {(searched ? allColumn : allColumns).map((opt, idx) => {
                     let checked = columns?.includes(opt[0]);
                     return (
                       <Grid
@@ -415,7 +430,7 @@ function TableForm() {
                     value !== "" ? value.toUpperCase() : "Select Column"
                   }
                   required
-                >
+                > 
                   {columns.map((val, idx) => {
                     return (
                       <MenuItem sx={{ color: "#46596A" }} value={val}>

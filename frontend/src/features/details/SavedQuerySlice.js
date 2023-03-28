@@ -7,7 +7,7 @@ const initialState = {
   savedData: [],
 };
 
-export const fetchSavedData = createAsyncThunk("/fetchSavedData", (body_data) => {
+export const fetchSavedData = createAsyncThunk("/fetchSavedData", () => {
   let data = axios({
     method: "get",
     url: "/get_all_saved_data",

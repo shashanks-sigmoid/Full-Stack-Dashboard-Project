@@ -1,5 +1,5 @@
 import { Box, Button, Typography } from "@mui/material";
-import React, { useState } from "react";
+import React from "react";
 import LoadData from "./LoadData/LoadData";
 import TableForm from "./TableForm";
 import { useSelector, useDispatch } from "react-redux";
@@ -12,7 +12,6 @@ function DetailPreview() {
   const detailPreview = useSelector((state) => state.detailPreview);
   const details = detailPreview.details;
   const load = detailPreview.load;
-  const queryForm = detailPreview.queryForm;
   const dispatch = useDispatch();
 
   return (

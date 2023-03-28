@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography, CircularProgress } from "@mui/material";
 
 function LoadingWait() {
     return (

@@ -26,7 +26,7 @@ function SignIn() {
 
     useEffect(()=>{
         if(loggedIn!=="null") navigate('/dashboard');     
-    },[loggedIn])
+    },[loggedIn, navigate])
 
 
     return (

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Box } from "@mui/material";
 import LoadingWait from "./LoadingWait";
@@ -45,7 +45,6 @@ const LoadData = () => {
     download: detailPreview.download,
   };
   useEffect(() => {
-    console.log("useeffect", bodyData);
     dispatch(fetchData(bodyData));
   }, [dispatch]);
 

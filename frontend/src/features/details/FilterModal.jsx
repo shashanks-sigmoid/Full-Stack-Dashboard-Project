@@ -19,6 +19,7 @@ import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { SingleInputDateRangeField } from "@mui/x-date-pickers-pro/SingleInputDateRangeField";
+import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -288,13 +289,26 @@ function FilterModal() {
                   </Typography>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DemoContainer
-                      sx={{ padding: "unset" }}
-                      components={[
-                        "SingleInputDateRangeField",
-                        "SingleInputDateRangeField",
-                      ]}
+                      sx={{ padding: "5px" }}
+                      components={['DateRangePicker']}
                     >
-                      <SingleInputDateRangeField
+                      <DateRangePicker 
+                        size="small"
+                        calendars={1}
+                        sx={{ color: "#46596A" }} 
+                        value={dateRange}
+                        onChange={(e) =>
+                          dispatch(
+                            handleFilterTypeInputChange({
+                              column: val.column,
+                              value: e,
+                              key: "dateRangeInput",
+                            })
+                          )
+                        }
+                        localeText={{ start: 'Start-date (included)', end: 'End-date (excluded)' }} 
+                      />
+                      {/* <SingleInputDateRangeField
                         size="small"
                         placeholder="Date Range..."
                         value={dateRange}
@@ -308,7 +322,7 @@ function FilterModal() {
                           )
                         }
                         sx={{ color: "#46596A" }}
-                      />
+                      /> */}
                     </DemoContainer>
                   </LocalizationProvider>
                   <DeleteOutlineIcon

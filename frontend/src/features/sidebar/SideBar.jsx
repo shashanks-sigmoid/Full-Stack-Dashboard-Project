@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { handleToggleQueryData, handleToggleSavedQuery } from './SideBarSlice';
+// import {handleTableNameOnChange} from '../details/DetailPreviewSlice';
 import { Box, Button, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
@@ -27,8 +28,9 @@ function SideBar() {
                     variant='contained'
                     startIcon={<LibraryAddIcon color={toggle ? 'text' : 'white'} />}
                     color={toggle ? 'btnColor' : 'text'}
-                    onClick={() =>
-                        dispatch(handleToggleQueryData())}
+                    onClick={() =>{
+                        dispatch(handleToggleQueryData())}}
+                        // dispatch(handleTableNameOnChange(""))}}
                 > <Typography color={toggle ? 'text.main' : 'white.main'}>
                         Query Data
                     </Typography>
@@ -40,7 +42,8 @@ function SideBar() {
                     startIcon={<LibraryBooksIcon color={toggle ? 'secondary' : 'text'} />}
                     color={toggle ? "white" : 'btnColor'}
                     onClick={() =>
-                        dispatch(handleToggleSavedQuery())}
+                        {dispatch(handleToggleSavedQuery())}}
+                        // dispatch(handleTableNameOnChange(""))}}
                 > <Typography color={toggle ? 'secondary' : 'text.main'}>
                         Saved Queries
                     </Typography></Button>
